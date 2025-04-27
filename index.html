@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chat App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #chat-container {
+            width: 300px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        #messages {
+            height: 200px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        #input-container {
+            display: flex;
+        }
+        #input-message {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #send-btn {
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="messages"></div>
+        <div id="input-container">
+            <input type="text" id="input-message" placeholder="Type your message..." />
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const messagesDiv = document.getElementById("messages");
+        const inputMessage = document.getElementById("input-message");
+        const sendBtn = document.getElementById("send-btn");
+
+        // When message is received
+        socket.on('message', (msg) => {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = msg;
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to bottom
+        });
+
+        // When the chat starts
+        socket.on('chat start', () => {
+            messagesDiv.innerHTML = "<p>You're now connected to a random user. Start chatting!</p>";
+        });
+
+        // When waiting for another user
+        socket.on('waiting', () => {
+            messagesDiv.innerHTML = "<p>Waiting for someone to connect...</p>";
+        });
+
+        // When partner disconnects
+        socket.on('partner disconnected', () => {
+            messagesDiv.innerHTML += "<p>Your chat partner has disconnected.</p>";
+        });
+
+        // Send message when clicking send button
+        sendBtn.addEventListener("click", () => {
+            const message = inputMessage.value;
+            if (message.trim() !== "") {
+                socket.emit('message', message);
+                inputMessage.value = ""; // Clear input field
+            }
+        });
+
+        // Send message when pressing enter key
+        inputMessage.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                sendBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
