@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; margin-top: 50px; }
+        #messages { width: 90%; max-width: 500px; height: 300px; border: 1px solid #ccc; overflow-y: scroll; margin-bottom: 10px; padding: 10px; }
+        #input { width: 90%; max-width: 500px; display: flex; }
+        #input input { flex: 1; padding: 10px; }
+        #input button { padding: 10px; }
+    </style>
+</head>
+<body>
+
+<h1>Simple 1-to-1 Chat</h1>
+
+<div id="messages"></div>
+
+<div id="input">
+    <input id="messageInput" autocomplete="off" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+    const messagesDiv = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+
+    function addMessage(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        messagesDiv.appendChild(div);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    socket.on('waiting', () => {
+        addMessage('Waiting for a partner...');
+    });
+
+    socket.on('chat start', () => {
+        addMessage('Partner found! Start chatting.');
+    });
+
+    socket.on('message', (msg) => {
+        addMessage('Partner: ' + msg);
+    });
+
+    socket.on('partner disconnected', () => {
+        addMessage('Partner disconnected. Refresh to find a new one.');
+    });
+
+    function sendMessage() {
+        const msg = messageInput.value.trim();
+        if (msg !== '') {
+            addMessage('You: ' + msg);
+            socket.emit('message', msg);
+            messageInput.value = '';
+        }
+    }
+</script>
+
+</body>
+</html>
