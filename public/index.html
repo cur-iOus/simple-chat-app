@@ -2,64 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Simple Chat</title>
-    <style>
-        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; margin-top: 50px; }
-        #messages { width: 90%; max-width: 500px; height: 300px; border: 1px solid #ccc; overflow-y: scroll; margin-bottom: 10px; padding: 10px; }
-        #input { width: 90%; max-width: 500px; display: flex; }
-        #input input { flex: 1; padding: 10px; }
-        #input button { padding: 10px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chat App</title>
 </head>
 <body>
+    <h1>Welcome to the Chat App!</h1>
+    <div id="chat">
+        <!-- Chat content will appear here -->
+    </div>
 
-<h1>Simple 1-to-1 Chat</h1>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        const socket = io();
+        $(document).ready(function () {
+            socket.on('chat start', function () {
+                alert("You are now chatting with someone!");
+            });
 
-<div id="messages"></div>
+            socket.on('waiting', function () {
+                alert("Waiting for a partner...");
+            });
 
-<div id="input">
-    <input id="messageInput" autocomplete="off" placeholder="Type a message..." />
-    <button onclick="sendMessage()">Send</button>
-</div>
+            socket.on('message', function (msg) {
+                $('#chat').append('<p>' + msg + '</p>');
+            });
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-    const socket = io();
-    const messagesDiv = document.getElementById('messages');
-    const messageInput = document.getElementById('messageInput');
-
-    function addMessage(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        messagesDiv.appendChild(div);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-
-    socket.on('waiting', () => {
-        addMessage('Waiting for a partner...');
-    });
-
-    socket.on('chat start', () => {
-        addMessage('Partner found! Start chatting.');
-    });
-
-    socket.on('message', (msg) => {
-        addMessage('Partner: ' + msg);
-    });
-
-    socket.on('partner disconnected', () => {
-        addMessage('Partner disconnected. Refresh to find a new one.');
-    });
-
-    function sendMessage() {
-        const msg = messageInput.value.trim();
-        if (msg !== '') {
-            addMessage('You: ' + msg);
-            socket.emit('message', msg);
-            messageInput.value = '';
-        }
-    }
-</script>
-
+            // Send message
+            $('#sendMessage').click(function () {
+                const message = $('#message').val();
+                socket.emit('message', message);
+                $('#message').val('');
+            });
+        });
+    </script>
 </body>
 </html>
